@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -26,13 +27,14 @@ model Golongan {
   tunjangan_transport Int
   tunjangan_makan     Int
   karyawan            Karyawan[]
+
   @@map("golongan")
 }
 
 model Karyawan {
   id            Int         @id @default(autoincrement())
-  nip           String      @db.VarChar(12)
-  nik           String      @db.VarChar(12)
+  nip           String      @unique @db.VarChar(12)
+  nik           String      @unique @db.VarChar(12)
   nama          String      @db.VarChar(100)
   jenis_kelamin JenisKelamin
   tempat_lahir  String      @db.VarChar(100)
@@ -47,6 +49,7 @@ model Karyawan {
   lembur        Lembur[]
   cuti          Cuti[]
   penggajian    Penggajian[]
+
   @@map("karyawan")
 }
 
@@ -56,6 +59,7 @@ model Lembur {
   jumlah         Int
   karyawan_id    Int
   karyawan       Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+
   @@map("lembur")
 }
 
@@ -65,6 +69,7 @@ model Cuti {
   jumlah       Int
   karyawan_id  Int
   karyawan     Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+
   @@map("cuti")
 }
 
@@ -78,5 +83,6 @@ model Penggajian {
   total_gaji_diterima Int
   karyawan_id         Int
   karyawan            Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+
   @@map("penggajian")
 }
