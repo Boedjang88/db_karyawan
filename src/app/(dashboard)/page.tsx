@@ -1,8 +1,8 @@
-// src/app/(dashboard)/page.tsx
-export default function DashboardPage() {
+export default function DashboardHome() {
   return (
-    <div>
-      <h1>HALAMAN DASHBOARD INI BERHASIL DITAMPILKAN</h1>
-    </div>
+    <section>
+      <h2 className="text-2xl font-bold mb-4">Dashboard Utama</h2>
+      <p className="text-gray-700">Selamat datang di dashboard karyawan.</p>
+    </section>
   );
 }

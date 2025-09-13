@@ -1,5 +1,6 @@
 // src/app/dashboard/layout.tsx
 import Sidebar from '@/components/dashboard/Sidebar';
+import Topbar from './TopBar';
 
 export default function DashboardLayout({
   children,
@@ -9,9 +10,10 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
-      </main>
+      <div className="ml-64 w-full">
+        <Topbar />
+        <main className="p-6">{children}</main>
+      </div>
     </div>
   );
 }
