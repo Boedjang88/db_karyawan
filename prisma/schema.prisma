@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JenisKelamin {
+  pria
+  wanita
+}
+
+enum StatusNikah {
+  belum_nikah
+  nikah
+}
+
+model Golongan {
+  id                  Int        @id @default(autoincrement())
+  nama_golongan       String     @db.VarChar(100)
+  gaji_pokok          Int
+  tunjangan_istri     Int
+  tunjangan_anak      Int
+  tunjangan_transport Int
+  tunjangan_makan     Int
+  karyawan            Karyawan[]
+  @@map("golongan")
+}
+
+model Karyawan {
+  id            Int         @id @default(autoincrement())
+  nip           String      @db.VarChar(12)
+  nik           String      @db.VarChar(12)
+  nama          String      @db.VarChar(100)
+  jenis_kelamin JenisKelamin
+  tempat_lahir  String      @db.VarChar(100)
+  tanggal_lahir DateTime    @db.Date
+  telpon        String      @db.VarChar(12)
+  agama         String      @db.VarChar(15)
+  status_nikah  StatusNikah
+  alamat        String      @db.Text
+  foto          String      @db.VarChar(150)
+  golongan_id   Int
+  golongan      Golongan    @relation(fields: [golongan_id], references: [id], onDelete: Cascade)
+  lembur        Lembur[]
+  cuti          Cuti[]
+  penggajian    Penggajian[]
+  @@map("karyawan")
+}
+
+model Lembur {
+  id             Int      @id @default(autoincrement())
+  tanggal_lembur DateTime @db.Date
+  jumlah         Int
+  karyawan_id    Int
+  karyawan       Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+  @@map("lembur")
+}
+
+model Cuti {
+  id           Int      @id @default(autoincrement())
+  tanggal_cuti DateTime @db.Date
+  jumlah       Int
+  karyawan_id  Int
+  karyawan     Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+  @@map("cuti")
+}
+
+model Penggajian {
+  id                  Int      @id @default(autoincrement())
+  tanggal             DateTime @db.Date
+  keterangan          String   @db.Text
+  jumlah_gaji         Int
+  jumlah_lembur       Int
+  potongan            Int
+  total_gaji_diterima Int
+  karyawan_id         Int
+  karyawan            Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+  @@map("penggajian")
+}
