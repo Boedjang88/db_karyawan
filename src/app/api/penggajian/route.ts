@@ -2,13 +2,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// GET all penggajian records
 export async function GET() {
   try {
     const penggajian = await prisma.penggajian.findMany({
       include: { karyawan: true },
       orderBy: { id: 'desc' },
     });
-    console.log("DATA PENGGAJIAN:", penggajian);
     return NextResponse.json(penggajian);
   } catch (error) {
     console.error("[API_ERROR] GET:", error);
@@ -16,6 +16,7 @@ export async function GET() {
   }
 }
 
+// POST a new penggajian record (AUTO-CALCULATION)
 export async function POST(request: Request) {
   try {
     const { karyawan_id, bulan, tahun, keterangan } = await request.json();
@@ -46,9 +47,9 @@ export async function POST(request: Request) {
 
     const gaji_pokok_saat_itu = karyawan.golongan.gaji_pokok;
     const total_tunjangan = karyawan.golongan.tunjangan_anak + karyawan.golongan.tunjangan_istri + karyawan.golongan.tunjangan_makan + karyawan.golongan.tunjangan_transport;
-
-    const total_upah_lembur = lemburRecords.reduce((sum, r) => sum + r.jumlah, 0) * UPAH_LEMBUR_PER_JAM;
-    const total_potongan_cuti = cutiRecords.reduce((sum, r) => sum + r.jumlah, 0) * POTONGAN_CUTI_PER_HARI;
+    
+    const total_upah_lembur = lemburRecords.reduce((sum: number, r: { jumlah: number }) => sum + r.jumlah, 0) * UPAH_LEMBUR_PER_JAM;
+    const total_potongan_cuti = cutiRecords.reduce((sum: number, r: { jumlah: number }) => sum + r.jumlah, 0) * POTONGAN_CUTI_PER_HARI;
 
     const gaji_diterima = gaji_pokok_saat_itu + total_tunjangan + total_upah_lembur - total_potongan_cuti;
 
@@ -71,16 +72,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[API_ERROR] POST:", error);
     return NextResponse.json({ message: 'Gagal memproses penggajian', error: (error as Error).message }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const id = Number(params.id);
-    await prisma.penggajian.delete({ where: { id } });
-    return NextResponse.json({ message: 'Berhasil dihapus' });
-  } catch (error) {
-    console.error("[API_ERROR] DELETE:", error);
-    return NextResponse.json({ message: 'Gagal menghapus penggajian', error: (error as Error).message }, { status: 500 });
   }
 }
