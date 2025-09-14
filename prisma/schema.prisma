@@ -8,15 +8,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum JenisKelamin {
-  pria
-  wanita
-}
-
-enum StatusNikah {
-  belum_nikah
-  nikah
-}
+enum JenisKelamin { pria, wanita }
+enum StatusNikah { belum_nikah, nikah }
 
 model Golongan {
   id                  Int        @id @default(autoincrement())
@@ -27,8 +20,6 @@ model Golongan {
   tunjangan_transport Int
   tunjangan_makan     Int
   karyawan            Karyawan[]
-
-  @@map("golongan")
 }
 
 model Karyawan {
@@ -45,12 +36,10 @@ model Karyawan {
   alamat        String      @db.Text
   foto          String      @db.VarChar(150)
   golongan_id   Int
-  golongan      Golongan    @relation(fields: [golongan_id], references: [id], onDelete: Cascade)
+  golongan      Golongan    @relation(fields: [golongan_id], references: [id])
+  penggajian    Penggajian[]
   lembur        Lembur[]
   cuti          Cuti[]
-  penggajian    Penggajian[]
-
-  @@map("karyawan")
 }
 
 model Lembur {
@@ -58,9 +47,7 @@ model Lembur {
   tanggal_lembur DateTime @db.Date
   jumlah         Int
   karyawan_id    Int
-  karyawan       Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
-
-  @@map("lembur")
+  karyawan       Karyawan @relation(fields: [karyawan_id], references: [id])
 }
 
 model Cuti {
@@ -68,21 +55,20 @@ model Cuti {
   tanggal_cuti DateTime @db.Date
   jumlah       Int
   karyawan_id  Int
-  karyawan     Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
-
-  @@map("cuti")
+  karyawan     Karyawan @relation(fields: [karyawan_id], references: [id])
 }
 
 model Penggajian {
-  id                  Int      @id @default(autoincrement())
-  tanggal             DateTime @db.Date
-  keterangan          String   @db.Text
-  jumlah_gaji         Int
-  jumlah_lembur       Int
-  potongan            Int
-  total_gaji_diterima Int
+  id                  Int       @id @default(autoincrement())
   karyawan_id         Int
-  karyawan            Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
-
-  @@map("penggajian")
+  karyawan            Karyawan  @relation(fields: [karyawan_id], references: [id])
+  bulan               Int       // <--- tambahkan ini
+  tahun               Int       // <--- tambahkan ini
+  tanggal_gajian      DateTime
+  gaji_pokok_saat_itu Int
+  total_tunjangan     Int
+  total_upah_lembur   Int
+  total_potongan_cuti Int
+  gaji_diterima       Int
+  keterangan          String?
 }

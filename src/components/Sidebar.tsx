@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation';
 export default function Sidebar() {
   const pathname = usePathname();
   const menuItems = [
-    { href: '/dashboard/karyawan', label: 'Karyawan' },
-    { href: '/dashboard/golongan', label: 'Golongan' },
-    { href: '/dashboard/lembur', label: 'Lembur' },
-    { href: '/dashboard/cuti', label: 'Cuti' },
-    { href: '/dashboard/penggajian', label: 'Penggajian' },
+    { href: '/karyawan', label: 'Karyawan' },
+    { href: '/golongan', label: 'Golongan' },
+    { href: '/lembur', label: 'Lembur' },
+    { href: '/cuti', label: 'Cuti' },
+    { href: '/penggajian', label: 'Penggajian' },
   ];
 
   return (

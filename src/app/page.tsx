@@ -12,7 +12,7 @@ export default function HomePage() {
           Selamat datang di sistem manajemen penggajian.
         </p>
         <Link 
-          href="/dashboard/karyawan" 
+          href="/karyawan" 
           className="px-6 py-3 bg-sky-600 text-white font-semibold rounded-lg shadow-md hover:bg-sky-700 transition-colors"
         >
           Masuk ke Dashboard

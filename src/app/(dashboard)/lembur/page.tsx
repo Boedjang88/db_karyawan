@@ -1,9 +1,8 @@
-// src/app/(dashboard)/lembur/page.tsx
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useEffect, FormEvent, useCallback, ChangeEvent, FC, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
 
-// Definisikan tipe data/interface
+// Tipe Data
 interface Karyawan {
   id: number;
   nama: string;
@@ -16,21 +15,48 @@ interface Lembur {
   karyawan: Karyawan;
 }
 
+// Tipe Props untuk Komponen Helper
+interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  id: string;
+}
+interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  id: string;
+  options: { value: string | number; label: string }[];
+}
+
+// Komponen Helper
+const InputField: FC<InputFieldProps> = ({ label, id, ...props }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+    <input id={id} {...props} className="mt-1 p-2 border rounded w-full text-black" />
+  </div>
+);
+
+const SelectField: FC<SelectFieldProps> = ({ label, id, options, ...props }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+    <select id={id} {...props} className="mt-1 p-2 border rounded w-full text-black">
+      {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
+  </div>
+);
+
 export default function LemburPage() {
   const [lemburList, setLemburList] = useState<Lembur[]>([]);
   const [karyawanList, setKaryawanList] = useState<Karyawan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State untuk form tambah
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     karyawan_id: '',
     tanggal_lembur: new Date().toISOString().split('T')[0],
     jumlah: '',
-  });
+  };
+  const [formData, setFormData] = useState(initialFormData);
 
-  // State untuk modal edit
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLembur, setEditingLembur] = useState<Omit<Lembur, 'karyawan'> | null>(null);
+  const [editingData, setEditingData] = useState<Omit<Lembur, 'karyawan'> | null>(null);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -45,7 +71,6 @@ export default function LemburPage() {
       setLemburList(lemburData);
       setKaryawanList(karyawanData);
 
-      // Set default value untuk form tambah jika belum ada
       if (karyawanData.length > 0 && !formData.karyawan_id) {
         setFormData(prev => ({ ...prev, karyawan_id: String(karyawanData[0].id) }));
       }
@@ -56,15 +81,17 @@ export default function LemburPage() {
     }
   }, [formData.karyawan_id]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
   
+  const handleEditChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!editingData) return;
+    setEditingData(prev => ({ ...prev!, [e.target.name]: e.target.value }));
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await fetch('/api/lembur', {
@@ -72,7 +99,7 @@ export default function LemburPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
-    setFormData(prev => ({ ...prev, jumlah: '' })); // Hanya reset jumlah
+    setFormData({ ...initialFormData, karyawan_id: karyawanList[0]?.id.toString() || '' });
     fetchData();
   };
 
@@ -83,29 +110,27 @@ export default function LemburPage() {
     }
   };
 
-  const handleEditClick = (lembur: Lembur) => {
-    setEditingLembur({
-        id: lembur.id,
-        karyawan_id: lembur.karyawan_id,
-        tanggal_lembur: new Date(lembur.tanggal_lembur).toISOString().split('T')[0],
-        jumlah: lembur.jumlah
+  const handleEditClick = (data: Lembur) => {
+    setEditingData({
+        ...data,
+        tanggal_lembur: new Date(data.tanggal_lembur).toISOString().split('T')[0],
     });
     setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setEditingLembur(null);
+    setEditingData(null);
   };
 
   const handleUpdateSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editingLembur) return;
+    if (!editingData) return;
     
-    await fetch(`/api/lembur/${editingLembur.id}`, {
+    await fetch(`/api/lembur/${editingData.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editingLembur),
+      body: JSON.stringify(editingData),
     });
     handleModalClose();
     fetchData();
@@ -115,33 +140,20 @@ export default function LemburPage() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         <h1 className="text-3xl font-bold mb-6">Manajemen Lembur</h1>
 
-        {/* Form Tambah Lembur */}
         <div className="bg-white shadow-md rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-black">Tambah Data Lembur</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-                <label htmlFor="karyawan_id" className="block text-sm font-medium text-gray-700">Karyawan</label>
-                <select id="karyawan_id" name="karyawan_id" value={formData.karyawan_id} onChange={handleChange} className="mt-1 p-2 border rounded w-full text-black" required>
-                    {karyawanList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                </select>
-            </div>
-             <div>
-                <label htmlFor="tanggal_lembur" className="block text-sm font-medium text-gray-700">Tanggal Lembur</label>
-                <input id="tanggal_lembur" name="tanggal_lembur" type="date" value={formData.tanggal_lembur} onChange={handleChange} required className="mt-1 p-2 border rounded w-full text-black" />
-            </div>
-            <div>
-                <label htmlFor="jumlah" className="block text-sm font-medium text-gray-700">Jumlah (Jam)</label>
-                <input id="jumlah" name="jumlah" type="number" value={formData.jumlah} onChange={handleChange} placeholder="Jumlah jam lembur" required className="mt-1 p-2 border rounded w-full text-black" />
-            </div>
-            <button type="submit" className="px-4 py-2 bg-sky-600 text-white rounded-md h-10">Simpan</button>
+            <SelectField label="Karyawan" id="karyawan_id" name="karyawan_id" value={formData.karyawan_id} onChange={handleChange} options={karyawanList.map(k => ({ value: k.id, label: k.nama }))} required />
+            <InputField label="Tanggal Lembur" id="tanggal_lembur" name="tanggal_lembur" type="date" value={formData.tanggal_lembur} onChange={handleChange} required />
+            <InputField label="Jumlah (Jam)" id="jumlah" name="jumlah" type="number" min="1" value={formData.jumlah} onChange={handleChange} placeholder="Jumlah jam lembur" required />
+            <button type="submit" className="px-4 py-2 bg-sky-600 text-white rounded-md h-10 self-end">Simpan</button>
           </form>
         </div>
 
-        {/* Tabel Data Lembur */}
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="bg-white shadow-md rounded-lg overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -168,27 +180,15 @@ export default function LemburPage() {
         </div>
       </div>
 
-      {/* Modal untuk Edit */}
-      {isModalOpen && editingLembur && (
+      {isModalOpen && editingData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
             <h2 className="text-2xl font-bold mb-4 text-black">Edit Data Lembur</h2>
             <form onSubmit={handleUpdateSubmit} className="space-y-4">
-               <div>
-                <label htmlFor="edit_karyawan_id" className="block text-sm font-medium text-gray-700">Karyawan</label>
-                <select id="edit_karyawan_id" name="karyawan_id" value={editingLembur.karyawan_id} onChange={(e) => setEditingLembur({...editingLembur, karyawan_id: Number(e.target.value)})} className="mt-1 p-2 border rounded w-full text-black" required>
-                    {karyawanList.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                </select>
-            </div>
-             <div>
-                <label htmlFor="edit_tanggal_lembur" className="block text-sm font-medium text-gray-700">Tanggal Lembur</label>
-                <input id="edit_tanggal_lembur" name="tanggal_lembur" type="date" value={editingLembur.tanggal_lembur} onChange={(e) => setEditingLembur({...editingLembur, tanggal_lembur: e.target.value})} required className="mt-1 p-2 border rounded w-full text-black" />
-            </div>
-            <div>
-                <label htmlFor="edit_jumlah" className="block text-sm font-medium text-gray-700">Jumlah (Jam)</label>
-                <input id="edit_jumlah" name="jumlah" type="number" value={editingLembur.jumlah} onChange={(e) => setEditingLembur({...editingLembur, jumlah: Number(e.target.value)})} placeholder="Jumlah jam lembur" required className="mt-1 p-2 border rounded w-full text-black" />
-            </div>
-              <div className="flex justify-end space-x-4">
+               <SelectField label="Karyawan" id="edit_karyawan_id" name="karyawan_id" value={editingData.karyawan_id} onChange={handleEditChange} options={karyawanList.map(k => ({ value: k.id, label: k.nama }))} required />
+               <InputField label="Tanggal Lembur" id="edit_tanggal_lembur" name="tanggal_lembur" type="date" value={editingData.tanggal_lembur} onChange={handleEditChange} required />
+               <InputField label="Jumlah (Jam)" id="edit_jumlah" name="jumlah" type="number" min="1" value={editingData.jumlah} onChange={handleEditChange} placeholder="Jumlah jam lembur" required />
+              <div className="flex justify-end space-x-4 pt-4">
                 <button type="button" onClick={handleModalClose} className="px-4 py-2 bg-gray-300 rounded-md">Batal</button>
                 <button type="submit" className="px-4 py-2 bg-sky-600 text-white rounded-md">Simpan Perubahan</button>
               </div>

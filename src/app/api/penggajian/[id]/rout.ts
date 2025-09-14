@@ -2,22 +2,21 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// PUT (update) a penggajian record
+// PUT (update)
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const data = await request.json();
-    const numericData = {
-      karyawan_id: Number(data.karyawan_id),
-      jumlah_gaji: Number(data.jumlah_gaji),
-      jumlah_lembur: Number(data.jumlah_lembur),
-      potongan: Number(data.potongan),
-      total_gaji_diterima: Number(data.total_gaji_diterima),
-      tanggal: new Date(data.tanggal),
-      keterangan: data.keterangan,
-    };
     const updatedPenggajian = await prisma.penggajian.update({
       where: { id: Number(params.id) },
-      data: numericData,
+      data: {
+        karyawan_id: Number(data.karyawan_id),
+        tanggal: new Date(data.tanggal),
+        keterangan: data.keterangan,
+        jumlah_gaji: Number(data.jumlah_gaji),
+        jumlah_lembur: Number(data.jumlah_lembur),
+        potongan: Number(data.potongan),
+        total_gaji_diterima: Number(data.total_gaji_diterima),
+      },
     });
     return NextResponse.json(updatedPenggajian);
   } catch (error) {
@@ -25,12 +24,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-// DELETE a penggajian record
+// DELETE
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    await prisma.penggajian.delete({
-      where: { id: Number(params.id) },
-    });
+    await prisma.penggajian.delete({ where: { id: Number(params.id) } });
     return NextResponse.json({ message: 'Data penggajian berhasil dihapus' });
   } catch (error) {
     return NextResponse.json({ message: 'Gagal menghapus data penggajian', error }, { status: 500 });
